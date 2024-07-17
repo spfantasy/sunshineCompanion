@@ -27,5 +27,13 @@
  */
 
 import './index.css';
+import { createApp } from 'vue'
+import App from './App.vue'
+import ViewUIPlus from 'view-ui-plus'
+import 'view-ui-plus/dist/styles/viewuiplus.css'
+
 
 console.log('👋 This message is being logged by "renderer.js", included via Vite');
+const app = createApp(App)
+app.use(ViewUIPlus)
+    .mount('#app')
