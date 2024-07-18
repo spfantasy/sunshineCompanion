@@ -1,0 +1,16 @@
+{
+  "services": [
+    {
+      "label": "服务1",
+      "value": "www.sohu.com/${targetEnv}/health_check"
+    },
+    {
+      "label": "服务2",
+      "value": "www.sina.com/${targetEnv}/health_check"
+    },
+    {
+      "label": "服务3",
+      "value": "www.baidu.com/${targetEnv}/health_check"
+    }
+  ]
+}

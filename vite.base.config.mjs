@@ -1,5 +1,6 @@
 import { builtinModules } from 'node:module';
 import pkg from './package.json';
+import {viteStaticCopy} from "vite-plugin-static-copy";
 
 export const builtins = [
   'electron',
@@ -24,6 +25,20 @@ export const getBuildConfig = (env) => {
       minify: command === 'build',
     },
     clearScreen: false,
+    plugins: [
+      viteStaticCopy({
+        targets: [
+          {
+            src: 'src/config/*',
+            dest: 'config',
+          },
+          {
+            src: 'src/backend/*',
+            dest: 'backend',
+          },
+        ],
+      }),
+    ],
   };
 };
 

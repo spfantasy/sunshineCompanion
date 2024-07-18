@@ -1,0 +1,32 @@
+[
+  {
+    "value": "xx",
+    "label": "第一环境",
+    "dns": "xx",
+    "datasource": [
+      {
+        "value": "xxxxdb",
+        "label": "FTMS数据库",
+        "type": "sql",
+        "params": {
+          "dialect": "mysql",
+          "host": "localhost",
+          "port": 3306,
+          "database": "testdb",
+          "username": "root",
+          "password": "rootpassword"
+        }
+      }
+    ],
+  },
+  {
+    "value": "yy",
+    "label": "第二环境",
+    "dns": "yy",
+  },
+  {
+    "value": "xy",
+    "label": "第三环境",
+    "dns": "z",
+  }
+]

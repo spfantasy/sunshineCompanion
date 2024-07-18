@@ -1,0 +1,193 @@
+[
+  {
+    value: 'inputModule1',
+    label: '某个id',
+    type: 'input',
+    parents: [],
+    inference: {
+      retrievers: [
+        {
+          datasource: 'xxxxdb',
+          query: "SELECT CAST(id AS CHAR) AS value, CONCAT('标签', string_field) AS label FROM my_table",
+          sink: [
+            {
+              statement: 'ctx.inputModule1.selection = ctx.inputModule1.queryResult?.[0]?.value',
+            },
+            {
+              statement: 'ctx.inputModule1.choices = ctx.inputModule1.queryResult',
+            },
+          ],
+        },
+      ],
+      success: 'ctx.inputModule1.selection != null',
+    },
+  },
+  {
+    value: 'inputModule2',
+    label: '另一个id',
+    type: 'input',
+    parents: [
+      'inputModule1',
+    ],
+    inference: {
+      retrievers: [
+        {
+          datasource: 'xxxxdb',
+          query: 'SELECT CAST(id AS CHAR) AS value, value AS label FROM my_table2 WHERE `key` = ?',
+          queryParams: [
+            'ctx.inputModule1.selection',
+          ],
+          sink: [
+            {
+              statement: 'ctx.inputModule2.selection = ctx.inputModule2?.queryResult?.[0]?.value',
+            },
+            {
+              if: 'ctx.inputModule2.selection === ctx.inputModule2.selection',
+              statement: 'ctx.inputModule2.choices = ctx.inputModule2.queryResult',
+            },
+          ],
+        },
+      ],
+      success: 'ctx.inputModule2.selection != null',
+    },
+  },
+  {
+    value: 'outputModule2',
+    label: '输出2',
+    type: 'output',
+    parents: [
+      'outputModule5',
+      'outputModule4',
+    ],
+    inDegree: 1,
+    inference: {
+      retrievers: [
+        {
+          datasource: 'xxxxdb',
+          query: 'SELECT attr1, attr2 FROM my_table WHERE `id` = ?',
+          queryParams: [
+            'BigInt(ctx.inputModule1.selection)',
+          ],
+          sink: [
+            {
+              statement: 'ctx.outputModule1.data = ctx.outputModule1.queryResult?.[0]',
+            },
+          ],
+        },
+      ],
+      component: {
+        type: 'div',
+        children: [
+          {
+            type: 'Row',
+            children: [
+              {
+                type: 'Col',
+                span: '4',
+                innerHTML: '`123:${ctx.outputModule1?.data?.attr1}`',
+              },
+              {
+                type: 'Col',
+                span: '20',
+                innerHTML: '`456:${ctx.outputModule1?.data?.attr2}`',
+              },
+            ],
+          },
+          {
+            type: 'Row',
+            children: [
+              {
+                type: 'Col',
+                span: '24',
+                innerHTML: '789',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  },
+  {
+    value: 'outputModule3',
+    label: '输出3',
+    type: 'output',
+    inference: {
+      success: 'false',
+    },
+  },
+  {
+    value: 'outputModule4',
+    label: '输出4',
+    type: 'output',
+    parents: [
+      'outputModule3',
+    ],
+  },
+  {
+    value: 'outputModule5',
+    label: '输出5',
+    type: 'output',
+    parents: [
+      'outputModule1',
+    ],
+  },
+  {
+    value: 'outputModule1',
+    label: '输出1',
+    type: 'output',
+    parents: [
+      'inputModule1',
+    ],
+    inference: {
+      retrievers: [
+        {
+          datasource: 'xxxxdb',
+          query: 'SELECT attr1, attr2 FROM my_table WHERE `id` = ?',
+          queryParams: [
+            'BigInt(ctx.inputModule1.selection)',
+          ],
+          sink: [
+            {
+              statement: 'ctx.outputModule1.data = ctx.outputModule1.queryResult?.[0]',
+            },
+            {
+              statement: 'ctx.outputModule1.abstract = `${ctx.outputModule1?.data?.attr1}|${ctx.outputModule1?.data?.attr2}`',
+            },
+          ],
+        },
+      ],
+      component: {
+        type: 'div',
+        children: [
+          {
+            type: 'Row',
+            children: [
+              {
+                type: 'Col',
+                span: '12',
+                innerHTML: '`123:${ctx.outputModule1?.data?.attr1}`',
+              },
+              {
+                type: 'Col',
+                span: '12',
+                innerHTML: '`456:${ctx.outputModule1?.data?.attr2}`',
+              },
+            ],
+          },
+          {
+            type: 'Row',
+            children: [
+              {
+                type: 'Col',
+                span: '24',
+                innerHTML: '789789',
+              },
+            ],
+          },
+        ],
+      },
+      success: 'ctx.outputModule1.data != null',
+    },
+    circuitBreaker: true,
+  },
+]

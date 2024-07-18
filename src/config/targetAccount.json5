@@ -1,0 +1,22 @@
+{
+  "method": "POST",
+  "url": "www.baidu.com/login",
+  "users": [
+    {
+      "value": "user1",
+      "label": "周杰伦",
+      "param": {
+        "key1": "value1",
+        "key2": "value2"
+      }
+    },
+    {
+      "value": "user2",
+      "label": "王力宏",
+      "param": {
+        "key1": "value1",
+        "key2": "value2"
+      }
+    }
+  ]
+}

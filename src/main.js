@@ -1,6 +1,13 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('node:path');
+const {fork, spawn} = require("child_process");
+const JSON5 = require("json5");
+const fs = require('fs');
+const expressAppProcess = require('./backend/server.js');
 
+let config;
+let mainWindow = null;
+const EXEC_DIR = app.isPackaged ? process.resourcesPath : __dirname;
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -8,7 +15,7 @@ if (require('electron-squirrel-startup')) {
 
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -29,8 +36,25 @@ const createWindow = () => {
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
+function findServerFile() {
+  if (fs.existsSync(path.resolve(EXEC_DIR, 'app.asar'))) {
+    return path.resolve(EXEC_DIR, 'app.asar', 'backend/server.js');
+  }
+  else {
+    return path.resolve(EXEC_DIR, 'backend/server.js');
+  }
+}
+
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  console.log(`App is ready on ${EXEC_DIR}`);
+  config = JSON5.parse(fs.readFileSync(path.resolve(EXEC_DIR, "config/env.json5"), 'utf8'));
+  // 启动后端服务器
+  const expressPath = findServerFile();
+  console.log(`fork on ${expressPath}`);
+  expressAppProcess(EXEC_DIR, config.backend.port).catch(err => {
+    console.error('Failed to start server:', err);
+  });
   createWindow();
 
   // On OS X it's common to re-create a window in the app when the
