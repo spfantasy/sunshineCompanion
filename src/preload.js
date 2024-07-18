@@ -1,2 +1,7 @@
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
+const { contextBridge, ipcRenderer } = require('electron');
+// Electron preload.js use CommonJS syntax as default
+console.log('Preload script load start');
+contextBridge.exposeInMainWorld('electron', {
+    fetchData: (endpoint, params) => ipcRenderer.invoke('fetch_data', endpoint, params)
+});
+console.log('Preload script load done');

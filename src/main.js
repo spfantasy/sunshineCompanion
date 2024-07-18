@@ -1,12 +1,11 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain} = require('electron');
 const path = require('node:path');
-const {fork, spawn} = require("child_process");
+const axios = require('axios');
 const JSON5 = require("json5");
 const fs = require('fs');
 const expressAppProcess = require('./backend/server.js');
 
 let config;
-let mainWindow = null;
 const EXEC_DIR = app.isPackaged ? process.resourcesPath : __dirname;
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -15,23 +14,26 @@ if (require('electron-squirrel-startup')) {
 
 const createWindow = () => {
   // Create the browser window.
-  mainWindow = new BrowserWindow({
+  const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      enableRemoteModule: false,
+      nodeIntegration: false
     },
   });
-
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
-
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  new Promise(resolve => setTimeout(resolve, 1000)).then(
+      () => mainWindow.webContents.openDevTools()
+  );
 };
 
 // This method will be called when Electron has finished
@@ -75,5 +77,14 @@ app.on('window-all-closed', () => {
   }
 });
 
+ipcMain.handle('fetch_data', async (event, endpoint, params) => {
+  try {
+    const response = await axios.post(`http://localhost:${config.backend.port}/api/${endpoint}`, params);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching data from server:', error);
+    throw JSON5.stringify(error.response.data);
+  }
+});
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
