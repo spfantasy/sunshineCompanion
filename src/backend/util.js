@@ -1,3 +1,4 @@
+const axios = require('axios');
 function formatString(template, obj, nullElement) {
     if (template == null) {return template;}
     return template.replace(/{([^}]+)}/g, (match, path) => {
@@ -45,8 +46,26 @@ function evalObject(obj, ctx) {
     }
 }
 
+async function checkBackend(url, timeout) {
+    try {
+        const response = await axios.get(url,{timeout: timeout});
+        return {
+            status: response.status,
+            time: new Date().toLocaleString(),
+            info: "",
+        }
+    } catch (errorInfo) {
+        return {
+            status: 500,
+            time: new Date().toLocaleString(),
+            info: errorInfo.message || "Unknown error",
+        }
+    }
+}
+
 module.exports = {
     formatString,
     evalString,
-    evalObject
+    evalObject,
+    checkBackend
 };

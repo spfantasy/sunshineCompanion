@@ -2,6 +2,8 @@
 import {inject, onMounted, ref, watch} from "vue";
 import {Icon, List, ListItem, Space, Spin, Tooltip} from "view-ui-plus";
 import axios from "axios";
+import {backendCheck} from "./electronAPI";
+
 const targetEnv = inject("targetEnv");
 const serverConfig = ref({"services": []});
 const env = inject("env");
@@ -18,15 +20,6 @@ const fetchTargetServices = async () => {
 };
 
 async function healthCheck(url) {
-  try {
-    const response = await axios.get(url,{timeout: env.value.backend.targetStats.TimeoutMilliseconds});
-    console.log(`await axios.get(${url},{timeout: ${env.value.backend.targetStats.TimeoutMilliseconds}})`);
-    console.log(response.status);
-    console.log(response.data);
-    return [response.status, new Date().toLocaleString(), ""];
-  } catch (errorInfo) {
-    return [500, new Date().toLocaleString(), errorInfo];
-  }
 
 }
 
@@ -36,10 +29,10 @@ async function broadcastHealthCheck() {
     item.errorInfo = null;
     // time.sleep(200);
     await new Promise(r => setTimeout(r, env.value.backend.targetStats.reloadMilliseconds));
-    const [status, lastUpdated, errorInfo] = await healthCheck(item.formatted);
-    item.status = status;
-    item.lastUpdated = lastUpdated;
-    item.errorInfo = errorInfo;
+    const result = await backendCheck(item.formatted, env.value.backend.targetStats.TimeoutMilliseconds);
+    item.status = result.status;
+    item.lastUpdated = result.time;
+    item.errorInfo = result.info;
   })
   await Promise.all(promises);
 }
@@ -68,10 +61,10 @@ onMounted(() => {
 <template>
   <List border size="large" :header="'上次更新时间: ' + (serverConfig.services.length === 0 ? '更新中' : serverConfig.services[0].lastUpdated)">
     <ListItem v-for="server in serverConfig.services">
-      <Tooltip :content="server.formatted">
+      <Tooltip :content="server.formatted" placement="top" transfer max-width="500" >
         <Space>{{ server.label }}</Space>
       </Tooltip>
-      <Tooltip :content="server.errorInfo">
+      <Tooltip :content="server.errorInfo" placement="top" transfer max-width="500" >
         <Space>
           <div v-if="server.status == null" >
             <Spin />

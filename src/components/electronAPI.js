@@ -22,3 +22,7 @@ export async function deleteNode(nodeValue) {
 export async function addOrUpdateNode(node) {
     return await window.electron.fetchData("addOrUpdateNode", {"node": node});
 }
+
+export async function backendCheck(url, timeout) {
+    return await window.electron.fetchData("backendCheck", {"url": url, "timeout": timeout});
+}

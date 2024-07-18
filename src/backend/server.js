@@ -4,6 +4,7 @@ const path = require("path");
 const JSON5 = require('json5');
 const {hasCycle} = require('./graphCheck.js');
 const {graphWalk} = require("./graphWalk.js");
+const {checkBackend} = require('./util.js');
 const mysql = require('mysql2/promise');
 
 console.log('server.js start');
@@ -120,6 +121,14 @@ module.exports = async function startServer(folder, port) {
     app.post('/api/getNode', async (req, res) => {
         try {
             res.json(flowMeta.filter(node => node.value.toLowerCase() === req.body.keyword.toLowerCase())[0]);
+        } catch (error) {
+            res.status(500).json({message: error.message});
+        }
+    });
+
+    app.post('/api/backendCheck', async (req, res) => {
+        try {
+            res.json(await checkBackend(req.body.url, req.body.timeout));
         } catch (error) {
             res.status(500).json({message: error.message});
         }
