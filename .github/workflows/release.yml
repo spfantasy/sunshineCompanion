@@ -26,11 +26,11 @@ jobs:
       - name: Build for Mac ARM64
         run: npm run make -- --arch=arm64
 
-      - name: Upload Mac ARM64 build
+      - name: Upload Mac M-Series build
         uses: actions/upload-artifact@v4
         with:
-          name: mac-arm64-build
-          path: out/make/zip/darwin-arm64
+          name: mac-M-build
+          path: out/
 
   build-windows:
     runs-on: windows-latest
@@ -53,4 +53,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: out/make/squirrel.windows/ia32
+          path: out/
