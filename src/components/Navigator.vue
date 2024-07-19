@@ -20,12 +20,15 @@ async function fetchTargetData () {
     targetEnv.value = targetEnvChoices.value[0];
     defaultTargetEnv.value = targetEnv.value.value;
     // 加载右上角账号
-    const response = await window.electron.fetchData("json", {"filename": "targetAccount.json5"});
+    const response = await fetchJson("targetAccount.json5");
     targetAccountChoices.value = response.users;
     targetAccount.value = targetAccountChoices.value[0];
     defaultTargetAccount.value = targetAccount.value.value;
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.warn(`Error initializing navigator: [${error}] retry in 1s`);
+    new Promise(resolve => setTimeout(resolve, 1000)).then(
+        () => fetchTargetData()
+    );
   }
 }
 onBeforeMount(fetchTargetData);
@@ -49,7 +52,7 @@ function targetAccountOnSelect(model) {
 
 </script>
 <template>
-  <Menu theme="light" active-name="1" mode="horizontal" class="fixed-menu">
+  <Menu v-if="defaultTargetEnv" theme="light" active-name="1" mode="horizontal" class="fixed-menu">
     <div class="menu-left">
       <MenuItem name="1">
         <RouterLink class="custom-link" to="/">

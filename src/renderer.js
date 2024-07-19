@@ -6,6 +6,10 @@ import 'view-ui-plus/dist/styles/viewuiplus.css'
 import {basicSetup} from "codemirror";
 import VueCodemirror from 'vue-codemirror'
 
+window.electron.onLogMessage((message) => {
+    console.log(message);
+});
+
 const app = createApp(App)
 
 app.use(router)

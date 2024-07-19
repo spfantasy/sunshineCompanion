@@ -14,14 +14,14 @@ const app = express();
 
 const sqlEngines = {};
 
-module.exports = async function startServer(folder, port) {
+module.exports = async function startServer(folder, port, chromeConsole) {
     const targetEnvJson = path.resolve(folder, 'config/targetEnv.json5');
     const targetEnv = JSON5.parse(fs.readFileSync(targetEnvJson, 'utf8'));
     for (const env of targetEnv) {
         for (const datasource of env.datasource || []) {
             const key = env.value + ":" + datasource.value;
             const params = datasource.params;
-            console.log(`初始化数据库${key}：${params.username}@${params.host}:${params.port}-${params.database}`);
+            chromeConsole.log(`初始化数据库${key}：${params.username}@${params.host}:${params.port}-${params.database}`);
             sqlEngines[key] = await mysql.createConnection({
                 database: params.database,
                 user: params.username,
@@ -56,10 +56,11 @@ module.exports = async function startServer(folder, port) {
                 req.body.env,
                 JSON5.parse(req.body.query),
                 req.body.focus,
-                flowMeta);
+                flowMeta,
+                chromeConsole);
             res.json(newContext);
         } catch (error) {
-            console.log(`server.js ${error.message}`)
+            chromeConsole.log(`server.js ${error.message}`)
             res.status(500).json({message: error.message, name: error.name, stack: error.stack});
         }
     });
@@ -143,6 +144,6 @@ module.exports = async function startServer(folder, port) {
     });
 
     app.listen(port, () => {
-        console.log(`Server is running at http://localhost:${port}`);
+        chromeConsole.log(`Server is running at http://localhost:${port}`);
     })
 }

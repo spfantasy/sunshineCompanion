@@ -30,7 +30,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mac-M-build
-          path: out/
+          path: out/sunshinecompanion-darwin-arm64/
 
   build-windows:
     runs-on: windows-latest
@@ -53,4 +53,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-build
-          path: out/
+          path: out/sunshinecompanion-win32-x64/

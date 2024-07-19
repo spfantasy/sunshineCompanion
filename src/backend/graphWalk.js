@@ -42,7 +42,7 @@ function makeFocusSet(focus, nodes) {
     return [focusSet, focusList];
 }
 
-async function graphWalk(connections, env, queryParam, focus, nodes) {
+async function graphWalk(connections, env, queryParam, focus, nodes, chromeConsole) {
     // node.value -> [node.child.value]
     const graph = new Map();
     // node.value -> node.parents.length
@@ -135,112 +135,123 @@ async function graphWalk(connections, env, queryParam, focus, nodes) {
             const parentsExist = parents.some(parentValue => ctx[parentValue] != null);
             if (parentsExist) {
                 // 节点图中存在
+                chromeConsole.log(`渲染焦点父节点 ${focusValue}`);
                 ctx[focusValue] = nodeMap.get(focusValue);
                 renderNode(ctx, nodeMap.get(focusValue));
             }
         }
     }
+    // 重算焦点的边（因为下游可能会变多）
+    if (focus != null) {
+        chromeConsole.log(`重新渲染焦点 ${focus}`)
+        ctx.nodes = ctx.nodes.filter(node => node.id !== focus);
+        ctx.edges = ctx.edges.filter(edge => edge.target !== focus);
+        renderNode(ctx, nodeMap.get(focus));
+    }
     return ctx;
-}
 
 
-async function buildBean(connections, env, ctx, node, queryParam) {
-    try {
-        console.log("ctx = " + JSON5.stringify(ctx));
-        console.log("node = " + JSON5.stringify(node));
-        // 为bean建立空context数据
-        ctx[node.value] = {};
-        // 执行retriever部分逻辑
-        for (const retriever of node?.inference?.retrievers || []) {
-            const connection = connections[env + ":" + retriever.datasource];
-            const query = formatString(retriever.query, ctx, "");
-            const params =  (retriever.queryParams || []).map(p => evalString(p, ctx));
-            const [results, metadata] = await connection.query(query, params);
-            console.log(`${query}(${params}) => ${JSON5.stringify(results)}`);
-            ctx[node.value].queryResult = results;
-            for (const sinker of retriever.sink) {
-                const result = evalString(sinker.if, ctx);
-                if (sinker.if == null || result === true) {
-                    evalString(sinker.statement, ctx);
+    async function buildBean(connections, env, ctx, node, queryParam) {
+        try {
+            // 为bean建立空context数据
+            ctx[node.value] = {};
+            // 执行retriever部分逻辑
+            for (const retriever of node?.inference?.retrievers || []) {
+                const connection = connections[env + ":" + retriever.datasource];
+                const query = formatString(retriever.query, ctx, "");
+                const params =  (retriever.queryParams || []).map(p => evalString(p, ctx));
+                const [results, metadata] = await connection.query(query, params);
+                chromeConsole.log(`节点[${node.value}]执行 ${query}(${params}) => ${JSON5.stringify(results)}`);
+                ctx[node.value].queryResult = results;
+                for (const sinker of retriever.sink) {
+                    const result = evalString(sinker.if, ctx);
+                    if (sinker.if == null || result === true) {
+                        evalString(sinker.statement, ctx);
+                    }
                 }
             }
+            // 计算节点是否成功
+            if (node.inference?.success != null) {
+                ctx[node.value].success = evalString(node.inference.success, ctx);
+            } else {
+                ctx[node.value].success = true;
+            }
+            if (node.type === 'input') {
+                if(ctx[node.value].choices == null) {
+                    ctx[node.value].choices = []
+                }
+                // 入参覆盖query选项
+                if (queryParam[node.value] != null) {
+                    ctx[node.value].selection = queryParam[node.value];
+                    if(ctx[node.value].choices.find(e => e.value === ctx[node.value].selection) == null) {
+                        ctx[node.value].choices.push({
+                            "value": ctx[node.value].selection,
+                            "label": "?",
+                        })
+                    }
+                }
+            } else {
+                ctx[node.value].component = evalObject(node.inference?.component, ctx);
+            }
+            // 执行drawer 部分逻辑
+            ctx[node.value].queryResult = null;
+            chromeConsole.log(`渲染 ${node.value}`);
+            renderNode(ctx, node);
+            return ctx[node.value]?.success || false;
+        } catch (error) {
+            error.message = `执行节点${node.value}异常` + error.message;
+            chromeConsole.error(error.message);
+            throw error;
         }
-        // 计算节点是否成功
-        if (node.inference?.success != null) {
-            ctx[node.value].success = evalString(node.inference.success, ctx);
-        } else {
-            ctx[node.value].success = true;
+    }
+
+    function renderNode(ctx, node) {
+        if (node.circuitBreaker === true && ctx[node.value]?.success !== true) {
+            // 断路器启动且节点不生效 =》 跳过rendering
+            ctx[node.value] = null;
         }
         if (node.type === 'input') {
-            if(ctx[node.value].choices == null) {
-                ctx[node.value].choices = []
-            }
-            // 入参覆盖query选项
-            if (queryParam[node.value] != null) {
-                ctx[node.value].selection = queryParam[node.value];
-                if(ctx[node.value].choices.find(e => e.value === ctx[node.value].selection) == null) {
-                    ctx[node.value].choices.push({
-                        "value": ctx[node.value].selection,
-                        "label": "?",
-                    })
-                }
-            }
+            ctx.nodes.push({
+                id: node.value,
+                type: 'input',
+                data: {
+                    ...ctx[node.value],
+                    label: node.label,
+                    locked: false
+                },
+                position: {
+                    x: 0,
+                    y: 0,
+                },
+            })
         } else {
-            ctx[node.value].component = evalObject(node.inference?.component, ctx);
+            ctx.nodes.push({
+                id: node.value,
+                type: 'output',
+                data: {
+                    ...ctx[node.value],
+                    label: node.label,
+                },
+                position: {
+                    x: 0,
+                    y: 0,
+                },
+            })
         }
-        // 执行drawer 部分逻辑
-        ctx[node.value].queryResult = null;
-        renderNode(ctx, node);
-        return ctx[node.value]?.success || false;
-    } catch (error) {
-        error.message = `执行节点${node.value}异常` + error.message;
-        console.log(error.message);
-        throw error;
-    }
-}
 
-function renderNode(ctx, node) {
-    if (node.circuitBreaker === true && ctx[node.value]?.success !== true) {
-        // 断路器启动且节点不生效 =》 跳过rendering
-        ctx[node.value] = null;
-    }
-    if (node.type === 'input') {
-        ctx.nodes.push({
-            id: node.value,
-            type: 'input',
-            data: {
-                ...ctx[node.value],
-                label: node.label,
-                locked: false
-            },
-            position: {
-                x: 0,
-                y: 0,
-            },
-        })
-    } else {
-        ctx.nodes.push({
-            id: node.value,
-            type: 'output',
-            data: {
-                ...ctx[node.value],
-                label: node.label,
-            },
-            position: {
-                x: 0,
-                y: 0,
-            },
+        const parents = node.parents || [];
+        parents.forEach(parentValue => {
+            if (ctx[parentValue] != null) {
+                ctx.edges.push({
+                    id: `e${parentValue}-${node.value}`,
+                    source: parentValue,
+                    target: node.value,
+                    animated: !ctx[node.value]?.success || !ctx[parentValue]?.success,
+                    markerEnd: "arrow"
+                })
+            }
         })
     }
-
-    const parents = node.parents || [];
-    parents.forEach(parentValue => ctx.edges.push({
-        id: `e${parentValue}-${node.value}`,
-        source: parentValue,
-        target: node.value,
-        animated: !ctx[node.value]?.success || !ctx[parentValue]?.success,
-        markerEnd: "arrow"
-    }))
 }
 
 module.exports = {
