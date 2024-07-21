@@ -9,7 +9,7 @@ import {
   Modal,
   Radio,
   RadioGroup,
-  Row,
+  Row, Slider,
   Space,
   Switch, Tooltip
 } from "view-ui-plus";
@@ -69,6 +69,7 @@ const blankData = ref({
   label: null,
   type: "input",
   inDegree: null,
+  componentWidth: 100,
   circuitBreaker: false,
   parents: [],
   inference: {
@@ -310,6 +311,14 @@ const cmOptions = reactive({
   theme: "yeti"
 });
 
+const componentWidthMark = ref({
+  50: '50px',
+  100: '100px',
+  150: '150px',
+  200: '200px',
+  250: '250px',
+  300: '300px',
+})
 </script>
 
 <template>
@@ -401,6 +410,18 @@ const cmOptions = reactive({
             </Col>
             <Col>
               <Tooltip transfer max-width="200" content="配置熔断后，执行失败不显示该节点以及下游节点（适用于分支判断逻辑，为N选1的节点都配置为熔断）；此特性也会影响焦点的展示逻辑" placement="top">
+                <Icon type="ios-help-circle"/>
+              </Tooltip>
+            </Col>
+          </Row>
+        </FormItem>
+        <FormItem prop="componentWidth" label="内容宽度">
+          <Row justify="center" align="middle" :gutter="16">
+            <Col flex="9">
+              <Slider v-model="data.componentWidth" :step="10" :min="50" :max="300" :marks="componentWidthMark"></Slider>
+            </Col>
+            <Col flex="1">
+              <Tooltip transfer max-width="200" content="输入选项框/输出简介像显示像素数" placement="top">
                 <Icon type="ios-help-circle"/>
               </Tooltip>
             </Col>
@@ -502,14 +523,6 @@ const cmOptions = reactive({
         <FormItem prop="inference.component" label="边栏" v-if="data.type === 'output'">
           <Row justify="center" align="middle" :gutter="16">
             <Col flex="9">
-<!--              <Codemirror-->
-<!--                  v-model:value="componentString"-->
-<!--                  :options="cmOptions"-->
-<!--                  height="400px"-->
-<!--                  width="100%"-->
-<!--                  class="cm-component"-->
-<!--                  :border="true"-->
-<!--              />-->
               <CodeMirrorComponent v-model="componentString"/>
             </Col>
             <Col flex="1">

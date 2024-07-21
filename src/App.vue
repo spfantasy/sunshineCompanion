@@ -5,10 +5,8 @@ import {provide, ref} from "vue";
 import {Message} from "view-ui-plus";
 const env = ref({"frontend": {}, "backend": {}});
 const targetEnv = ref({});
-const targetAccount = ref({});
 provide("env", env);
 provide("targetEnv", targetEnv);
-provide("targetAccount", targetAccount);
 Message.config({duration: 5});
 </script>
 

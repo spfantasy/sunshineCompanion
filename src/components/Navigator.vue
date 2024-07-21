@@ -3,11 +3,8 @@ import {Icon, MenuItem, Space} from "view-ui-plus";
 import {inject, onBeforeMount, ref} from "vue";
 import {fetchJson} from "./electronAPI.js";
 const targetEnvChoices = ref();
-const targetAccountChoices = ref();
 const targetEnv = inject("targetEnv");
-const targetAccount = inject("targetAccount");
 const defaultTargetEnv = ref();
-const defaultTargetAccount = ref();
 const env = inject("env");
 
 async function fetchTargetData () {
@@ -19,11 +16,6 @@ async function fetchTargetData () {
     targetEnvChoices.value = await fetchJson("targetEnv.json5");
     targetEnv.value = targetEnvChoices.value[0];
     defaultTargetEnv.value = targetEnv.value.value;
-    // 加载右上角账号
-    const response = await fetchJson("targetAccount.json5");
-    targetAccountChoices.value = response.users;
-    targetAccount.value = targetAccountChoices.value[0];
-    defaultTargetAccount.value = targetAccount.value.value;
   } catch (error) {
     console.warn(`Error initializing navigator: [${error}] retry in 1s`);
     new Promise(resolve => setTimeout(resolve, 1000)).then(
@@ -38,14 +30,6 @@ function targetEnvOnSelect(model) {
   for (let i = 0; i < targetEnvChoices.value.length; i++) {
     if (targetEnvChoices.value[i].value === model.value) {
       targetEnv.value = targetEnvChoices.value[i];
-    }
-  }
-}
-
-function targetAccountOnSelect(model) {
-  for (let i = 0; i < targetAccountChoices.value.length; i++) {
-    if (targetAccountChoices.value[i].value === model.value) {
-      targetAccount.value = targetAccountChoices.value[i];
     }
   }
 }
@@ -73,11 +57,6 @@ function targetAccountOnSelect(model) {
           <Option v-for="env in targetEnvChoices" :value="env.value" :label="env.label">
             <span>{{ env.label }}</span>
             <span style="float:right;color:#ccc">{{ env.value }}</span>
-          </Option>
-        </Select>
-        <Select v-model="defaultTargetAccount" @on-select="targetAccountOnSelect" :style="env.frontend.accountStyle" filterable>
-          <Option v-for="account in targetAccountChoices" :value="account.value" :label="account.label" >
-            <span>{{ account.label }}</span>
           </Option>
         </Select>
       </Space>

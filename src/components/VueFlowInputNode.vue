@@ -1,7 +1,7 @@
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 import {Handle, Position, useVueFlow} from '@vue-flow/core'
-import {Message, Select, Space} from 'view-ui-plus';
+import {Message, Col, Row, Select } from 'view-ui-plus';
 
 const props = defineProps({
   id: {
@@ -14,7 +14,7 @@ const props = defineProps({
   },
 })
 
-const { findNode, updateNodeData, getConnectedEdges } = useVueFlow()
+const { findNode, updateNodeData, getConnectedEdges, updateNode,  SelectionMode} = useVueFlow()
 
 const selection = computed({
   get: () => props.data.selection,
@@ -27,6 +27,10 @@ const selection = computed({
 const locked = computed({
   get: () => props.data.locked,
   set: (locked) => updateNodeData(props.id, { locked: locked }),
+})
+
+const componentWidth = computed({
+  get: () => props.data.componentWidth == null ? 'width: 100px;' : `width: ${props.data.componentWidth}px;`,
 })
 
 function propagateLock(nodeId) {
@@ -74,30 +78,42 @@ function handleCreate(userDefinedValue) {
 </script>
 
 <template>
-  <span class="line" @click="copyToClipboard(selection)" style="color: royalblue">
-    {{props.data.label}}
-  </span>
-  <br/>
-  <span class="line">
-    <Space>
-      <Button shape="circle" @click="lockQuerySwitch" size="small" icon="ios-checkmark" v-if="locked" type="success"/>
-      <Button shape="circle" @click="lockQuerySwitch" size="small" icon="ios-lock" v-if="!locked"/>
-      <Select v-model="selection" size="small" style="width:100px" transfer
-              :disabled="locked" @on-change="flowInputChange(props.data.value)"
-              filterable allow-create @on-create="handleCreate">
-        <Option v-for="item in props.data.choices" :value="item.value" :label="item.value">
-          <span>{{ item.value }}</span>
-          <span style="float:right;color:#ccc">{{ item.label }}</span>
-        </Option>
-      </Select>
-    </Space>
-  </span>
-
+  <div class="container">
+    <span class="line" @click="copyToClipboard(selection)">
+      <Row :gutter="16" align="middle" justify="center">
+        <Col style="color: royalblue">
+          {{props.data.label}}
+        </Col>
+      </Row>
+    </span>
+    <br/>
+    <span class="line">
+      <Row :gutter="16" align="middle" justify="center">
+        <Col>
+          <Button shape="circle" @click="lockQuerySwitch" size="small" icon="ios-checkmark" v-if="locked" type="success"/>
+          <Button shape="circle" @click="lockQuerySwitch" size="small" icon="ios-lock" v-if="!locked"/>
+        </Col>
+        <Col>
+          <Select v-model="selection" size="small" :style="componentWidth" transfer
+                        :disabled="locked" @on-change="flowInputChange(props.data.value)"
+                        filterable allow-create @on-create="handleCreate">
+          <Option v-for="item in props.data.choices" :value="item.value" :label="item.value">
+            <span>{{ item.value }}</span>
+            <span style="float:right;color:#ccc">{{ item.label }}</span>
+          </Option>
+        </Select>
+        </Col>
+      </Row>
+    </span>
+  </div>
   <Handle type="source" :position="Position.Bottom" :connectable="false" />
   <Handle type="target" :position="Position.Top" :connectable="false" />
 </template>
 <style scoped>
-.line {
-  display: block;
+.container {
+  display: flex;
+  flex-direction: column;
+  width: fit-content; /* 自动调整父元素的宽度以适应子元素 */
 }
+
 </style>

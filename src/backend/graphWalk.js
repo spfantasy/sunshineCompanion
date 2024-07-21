@@ -210,19 +210,26 @@ async function graphWalk(connections, env, queryParam, focus, nodes, chromeConso
             // 断路器启动且节点不生效 =》 跳过rendering
             ctx[node.value] = null;
         }
-        if (node.type === 'input') {
+        else if (node.type === 'input') {
             ctx.nodes.push({
                 id: node.value,
                 type: 'input',
                 data: {
                     ...ctx[node.value],
                     label: node.label,
-                    locked: false
+                    locked: false,
+                    componentWidth: node.componentWidth,
                 },
                 position: {
                     x: 0,
                     y: 0,
                 },
+                style: {
+                    'display': 'flex',
+                    'flex-direction': 'column',
+                    'width': 'fit-content',
+                    'min-width': '100px',
+                }
             })
         } else {
             ctx.nodes.push({
@@ -231,11 +238,18 @@ async function graphWalk(connections, env, queryParam, focus, nodes, chromeConso
                 data: {
                     ...ctx[node.value],
                     label: node.label,
+                    componentWidth: node.componentWidth,
                 },
                 position: {
                     x: 0,
                     y: 0,
                 },
+                style: {
+                    'display': 'flex',
+                    'flex-direction': 'column',
+                    'width': 'fit-content',
+                    'min-width': '100px',
+                }
             })
         }
 
