@@ -265,7 +265,7 @@ async function closePanel() {
       <Button size="large" type="primary" shape="circle" icon="ios-search" @click=renderFlowAPI :loading="rendering" />
     </Panel>
   </VueFlow>
-  <Drawer :closable="false" width="640" v-model="openDetail">
+  <Drawer :closable="false" width="640" v-model="openDetail" draggable>
     <DynamicComponent :componentData="drawerData"></DynamicComponent>
   </Drawer>
   <VueFlowNodeDetail :node-value="detailValue" :active="detailActive" @on-panel-close="closePanel"

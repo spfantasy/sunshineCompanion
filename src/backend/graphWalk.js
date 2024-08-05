@@ -180,7 +180,7 @@ async function graphWalk(connections, env, queryParam, focus, nodes, chromeConso
                 if(ctx[node.value].choices == null) {
                     ctx[node.value].choices = []
                 }
-                // 入参覆盖query选项
+                // 入参覆盖query选项 => 覆盖并置成功
                 if (queryParam[node.value] != null) {
                     ctx[node.value].selection = queryParam[node.value];
                     if(ctx[node.value].choices.find(e => e.value === ctx[node.value].selection) == null) {
@@ -188,6 +188,7 @@ async function graphWalk(connections, env, queryParam, focus, nodes, chromeConso
                             "value": ctx[node.value].selection,
                             "label": "?",
                         })
+                        ctx[node.value].success = true;
                     }
                 }
             } else {
