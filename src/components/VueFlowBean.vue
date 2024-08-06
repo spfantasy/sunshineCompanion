@@ -52,7 +52,7 @@ onInit((vueFlowInstance) => {
 })
 
 onMounted(() => {
-  renderFlow();
+  renderFlowAPI();
   searchFocusNode("");
 });
 /**
@@ -110,7 +110,7 @@ async function renderFlow() {
     }
     console.log("render flow params="+JSON5.stringify(params));
     ctx.value = await window.electron.fetchData("renderFlow", params);
-    addNodes(ctx.value.nodes);
+    addNodes(ctx.value.nodes.map((e) => ({...e, hidden: true})));
     addEdges(ctx.value.edges);
     query.value = {};
     // update node position
@@ -140,6 +140,9 @@ async function renderFlowAPI() {
   const minDurationPromise = sleep(1000);
   await Promise.all([renderFlow(), minDurationPromise]);
   rendering.value = false;
+  nodes.value.forEach(node => {
+    updateNode(node.id, {hidden: false});
+  })
 }
 
 async function searchFocusNode(keyword) {
@@ -220,11 +223,12 @@ async function closePanel() {
       v-model:nodes="nodes"
       v-model:edges="edges"
       class="biz-flow"
-      :default-viewport="{ zoom: 1.5 }"
-      :min-zoom="0.2"
+      :class="[rendering ? 'animated-bg-gradient' : '']"
+      :default-viewport="{ zoom: 1.2 }"
+      :min-zoom="0.1"
       :max-zoom="4"
   >
-    <Background pattern-color="#aaa" :gap="16" />
+    <Background pattern-color="#aaa" :gap="16"/>
 
     <template #node-input="props">
       <VueFlowInputNode :id="props.id" :data="props.data"/>
@@ -261,8 +265,8 @@ async function closePanel() {
         </Select>
       </Space>
     </Panel>
-    <Panel position="top-center">
-      <Button size="large" type="primary" shape="circle" icon="ios-search" @click=renderFlowAPI :loading="rendering" />
+    <Panel position="bottom-center">
+      <Button size="large" type="primary" icon="ios-search" @click=renderFlowAPI :loading="rendering" >搜索</Button>
     </Panel>
   </VueFlow>
   <Drawer :closable="false" width="640" v-model="openDetail" draggable>
@@ -301,5 +305,59 @@ async function closePanel() {
   box-shadow:0 0 0 2px !important;
 }
 
+.animated-bg-gradient {
+  background:linear-gradient(122deg, #5cadff, #2b85e4);
+  background-size:800% 800%;
+  -webkit-animation:gradient 1s ease infinite;
+  -moz-animation:gradient 1s ease infinite;
+  animation:gradient 1s ease infinite
+}
+
+
+@-webkit-keyframes gradient {
+  0% {
+    background-position:0% 22%
+  }
+
+  50% {
+    background-position:100% 79%
+  }
+
+  to {
+    background-position:0% 22%
+  }
+
+
+}
+
+@-moz-keyframes gradient {
+  0% {
+    background-position:0% 22%
+  }
+
+  50% {
+    background-position:100% 79%
+  }
+
+  to {
+    background-position:0% 22%
+  }
+
+
+}
+
+@keyframes gradient {
+  0% {
+    background-position:0% 22%
+  }
+
+  50% {
+    background-position:100% 79%
+  }
+
+  to {
+    background-position:0% 22%
+  }
+}
 
 </style>

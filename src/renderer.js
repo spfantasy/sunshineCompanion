@@ -11,6 +11,13 @@ window.electron.onLogMessage((message) => {
 });
 
 const app = createApp(App)
+// 忽略非 prop 属性警告
+app.config.warnHandler = (msg, vm, trace) => {
+    if (msg.includes('Extraneous non-props attributes')) {
+        return;
+    }
+    console.warn(msg + trace);
+};
 
 app.use(router)
     .use(VueCodemirror, {

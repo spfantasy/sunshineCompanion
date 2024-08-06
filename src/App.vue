@@ -11,8 +11,10 @@ Message.config({duration: 5});
 </script>
 
 <template>
-  <Navigator/>
-  <RouterView v-if="targetEnv.value"/>
+  <div class="app-container">
+    <Navigator class="navigator"/>
+    <RouterView v-if="targetEnv.value" class="router-view"/>
+  </div>
 </template>
 <style>
 html, body, #app {
@@ -27,5 +29,21 @@ html, body, #app {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* 使容器的高度占满整个视口 */
+}
+
+.navigator {
+  flex-shrink: 0; /* 防止 Navigator 缩小 */
+  /* 你可以在这里设置 Navigator 的高度 */
+}
+
+.router-view {
+  flex-grow: 1; /* 使 RouterView 占据剩余的高度 */
+  overflow: auto; /* 如果内容超出视口，添加滚动条 */
 }
 </style>
