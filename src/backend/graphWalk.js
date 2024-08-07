@@ -183,12 +183,12 @@ async function graphWalk(connections, env, queryParam, focus, nodes, chromeConso
                 // 入参覆盖query选项 => 覆盖并置成功
                 if (queryParam[node.value] != null) {
                     ctx[node.value].selection = queryParam[node.value];
+                    ctx[node.value].success = true;
                     if(ctx[node.value].choices.find(e => e.value === ctx[node.value].selection) == null) {
                         ctx[node.value].choices.push({
                             "value": ctx[node.value].selection,
                             "label": "?",
                         })
-                        ctx[node.value].success = true;
                     }
                 }
             } else {
